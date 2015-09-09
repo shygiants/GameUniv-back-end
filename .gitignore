@@ -82,4 +82,4 @@ node_modules
 # For Security
 middlewares/mongoose.js
 middlewares/passport.js
-app.js
+/app.js
