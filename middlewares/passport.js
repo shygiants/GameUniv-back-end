@@ -3,6 +3,8 @@ var User = mongoose.model('User');
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 
+var config = require('../config');
+
 module.exports = function(passport) {
   passport.serializeUser(function(user, done) {
     done(null, user.id);
@@ -31,9 +33,9 @@ module.exports = function(passport) {
   }));
 
   passport.use(new FacebookStrategy({
-    clientID: 'FACEBOOK_CLIENT_ID',
-    clientSecret: 'FACEBOOK_CLIENT_SECRET',
-    callbackURL: 'http://HOST/auth/facebook/callback',
+    clientID: config.facebookClientId,
+    clientSecret: config.facebookClientSecret,
+    callbackURL: config.facebookCallbackURL,
     profileFields: ['emails']
   }, function(accessToken, refreshToken, profile, done) {
     console.log(profile);

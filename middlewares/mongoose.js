@@ -1,6 +1,7 @@
+var config = require('../config');
 
 module.exports = function(mongoose) {
-  mongoose.connect('mongodb://MONGO_DB_HOST/APP_COLLECTION');
+  mongoose.connect('mongodb://' + config.mongodbHost + '/' + config.collection);
 
   mongoose.connection.on('error', console.log);
   mongoose.connection.on('open', function() {
