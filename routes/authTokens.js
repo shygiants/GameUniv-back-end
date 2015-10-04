@@ -22,7 +22,7 @@ router.post('/:email', passport.authenticate('local', { session: false }),
     } else {
       res.json({
         success: false,
-        message: 'Wrong request'
+        message: 'Wrong Request'
       })
     }
 });

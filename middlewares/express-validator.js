@@ -6,10 +6,10 @@ module.exports = {
     customValidators: {
       isEmailAvailable: function(email) {
         return new Promise(function(resolve, reject) {
-          User.find({ email: email }, function(err, user) {
+          User.findOne({ email: email }, function(err, user) {
             if (err) reject(err);
-            if (user) reject(err);
-            else resolve(user);
+            else if (user) reject(null);
+            else resolve();
           });
         });
       }
