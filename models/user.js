@@ -2,10 +2,9 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-  userName: String,
-  email: String,
-  hashedPassword: { type: String, default: '' },
-  authToken: String,
+  userName: { type: String, required: true },
+  email: { type: String, required: true },
+  hashedPassword: { type: String, required: true },
   facebook: {}
 });
 
@@ -17,7 +16,17 @@ UserSchema.methods = {
 };
 
 UserSchema.statics = {
-
+  signup: function(body, callback) {
+    // TODO: validation
+    var created = new this({
+      userName: body.userName,
+      email: body.email,
+      hashedPassword: body.passwd
+    });
+    created.save(function(err) {
+      callback(err, created);
+    });
+  }
 };
 
 mongoose.model('User', UserSchema);

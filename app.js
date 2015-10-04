@@ -4,7 +4,6 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var session = require('express-session');
 
 // configuration
 var config = require('./config');
@@ -12,16 +11,20 @@ var config = require('./config');
 // middlewares
 var passport = require('passport');
 var mongoose = require('mongoose');
-
-var users = require('./routes/users');
-var auth = require('./routes/auth');
+var expressValidator = require('express-validator');
 
 var app = express();
 
+// configuration for middlewares
 require('./middlewares/mongoose')(mongoose);
+// Mongoose Models
 require('./models/user');
-// TODO: configure models
 require('./middlewares/passport')(passport);
+var validatorOpt = require('./middlewares/express-validator').options;
+
+// routers
+var users = require('./routes/users');
+var authTokens = require('./routes/authTokens');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -34,21 +37,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: config.secret, // TODO: set secret
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 24 // 24 hours
-  }
-}));
-
-// use passport session
+app.use(expressValidator(validatorOpt));
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use('/users', users);
-app.use('/auth', auth);
+app.use('/authTokens', authTokens);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
