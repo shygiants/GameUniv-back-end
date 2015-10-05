@@ -12,7 +12,7 @@ var opts = {
 
 module.exports = function(passport) {
   passport.use(new JwtStrategy(opts, function(payload, done) {
-    User.findOne({ email: payload.email }, function(err, user) {
+    User.findOne({ email: payload.email }, { hashedPassword: false }, function(err, user) {
       if (err)
           return done(err, false);
       if (user)
@@ -32,9 +32,11 @@ module.exports = function(passport) {
       if (err) { return done(err); }
       if (!user) {
         done(null, false, { message: 'Unknown user' });
+        return;
       }
       if (!user.authenticate(passwd)) {
         done(null, false, { message: 'Invalid password' });
+        return;
       }
 
       var token = jwt.sign(user, config.secret);
