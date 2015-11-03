@@ -1,30 +1,24 @@
 var express = require('express');
 var router = express.Router();
-var passport = require('passport');
+var mongoose = require('mongoose');
+var User = mongoose.model('User');
+var ErrorThrower = require('../utils/ErrorThrower');
+var localAuthenticator = require('../middlewares/authenticator').localAuthenticator;
 
-// router.get('/facebook', passport.authenticate('facebook', {
-//   scope: ['email'],
-//   failureRedirect: '/auth/failure'
-// }));
-//
-// router.get('/facebook/callback', passport.authenticate('facebook', {
-//   successRedirect: '/auth/success',
-//   failureRedirect: '/auth/failure'
-// }));
+router.post('/:email', function(req, res, next) {
+    req.checkParams('email', 'Email Required').notEmpty();
+    req.checkParams('email', 'Invalid Email').isEmail();
+    req.checkBody('passwd', 'Password Required').notEmpty();
 
-router.post('/:email', passport.authenticate('local', { session: false }),
-  function(req, res) {
-    if (req.params.email === req.user.email) {
+    req.asyncValidationErrors().then(next, function(err) {
+      // validation error
+      next(new ErrorThrower(err, 400));
+    });
+  }, localAuthenticator, function(req, res, next) {
       res.json({
         success: true,
-        token: req.user.token
+        token: req.user.getAuthToken()
       });
-    } else {
-      res.json({
-        success: false,
-        message: 'Wrong Request'
-      })
-    }
-});
+  });
 
 module.exports = router;

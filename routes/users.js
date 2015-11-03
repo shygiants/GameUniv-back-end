@@ -4,56 +4,50 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var jwt = require('jsonwebtoken');
 var config = require('../config');
-var passport = require('passport');
+var ErrorThrower = require('../utils/ErrorThrower');
+var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
 
 // signup
-router.post('/', function(req, res) {
+router.post('/', function(req, res, next) {
+  // validation
   req.checkBody('email', 'Email Required').notEmpty();
   req.checkBody('email', 'Invalid Email').isEmail();
   req.checkBody('email', 'Email already exists').isEmailAvailable();
-  req.checkBody('passwd', 'Invalid Password').notEmpty().isLength(8, 20);
-  req.checkBody('confirmPasswd', 'Invalid Password').equals(req.body.passwd);
+  req.checkBody('passwd', 'Password Required').notEmpty()
+  req.checkBody('passwd', 'Invalid Password').isLength(8, 20);
   req.checkBody('userName', 'User Name Required').notEmpty();
   req.checkBody('userName', 'Invalid User Name').isLength(3, 20);
 
+  // executes validator
   req.asyncValidationErrors().then(function() {
-    User.signup(req.body, function(err, user) {
-      if (err) {
-        res.json({
-          success: false,
-          message: 'Something wrong'
-        })
-      } else if (user) {
-        var token = jwt.sign(user, config.secret);
-
+      User.signup(req.body).then(function(token) {
         res.json({
           success: true,
           token: token
         });
-      }
-    });
-  }, function(err) {
-    res.json({
-      success: false,
-      message: err
+      }, function(err) {
+        next(new ErrorThrower(err, 500));
+      });
+    }, function(err) {
+      // validation error
+      next(new ErrorThrower(err, 400));
     });
   });
-});
 
-router.get('/:email', passport.authenticate('jwt', { session: false }),
-  function(req, res) {
-    // TODO: validation
-    if (req.user && req.params.email === req.user.email) {
-      res.json({
-        success: true,
-        user: req.user
-      })
-    } else {
-      res.json({
-        success: false,
-        message: 'Wrong token'
-      })
-    }
-  })
+router.get('/:email', function(req, res, next) {
+    req.checkParams('email', 'Email Required').notEmpty();
+    req.checkParams('email', 'Invalid Email').isEmail();
+
+    // executes validator
+    req.asyncValidationErrors().then(next, function(err) {
+        // validation error
+        next(new ErrorThrower(err, 400));
+      });
+    }, jwtAuthenticator, function(req, res, next) {
+        res.json({
+          success: true,
+          user: req.user
+        });
+      });
 
 module.exports = router;
