@@ -20,7 +20,7 @@ module.exports = {
   localAuthenticator: function(req, res, next) {
     User.getByEmail(req.params.email).then(function(user) {
       if (!user) {
-        next(new ErrorThrower('Invalid Email'), 400);
+        next(new ErrorThrower('Invalid Email', 400));
       } else if (user.authenticate(req.body.passwd)) {
         // authentication success
         req.user = user;
