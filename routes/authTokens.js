@@ -6,7 +6,6 @@ var ErrorThrower = require('../utils/ErrorThrower');
 var localAuthenticator = require('../middlewares/authenticator').localAuthenticator;
 
 router.post('/:email', function(req, res, next) {
-    req.checkParams('email', 'Email Required').notEmpty();
     req.checkParams('email', 'Invalid Email').isEmail();
     req.checkBody('passwd', 'Password Required').notEmpty();
 

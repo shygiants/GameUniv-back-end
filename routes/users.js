@@ -35,7 +35,6 @@ router.post('/', function(req, res, next) {
   });
 
 router.get('/:email', function(req, res, next) {
-    req.checkParams('email', 'Email Required').notEmpty();
     req.checkParams('email', 'Invalid Email').isEmail();
 
     // executes validator

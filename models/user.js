@@ -30,7 +30,7 @@ UserSchema.statics = {
     return new Promise(function(resolve, reject) {
       query.exec(function(err, user) {
         if (err) reject(err);
-        else if (user) resolve(user);
+        else resolve(user);
       });
     });
   },
