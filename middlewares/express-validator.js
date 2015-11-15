@@ -1,5 +1,7 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
+var Game = mongoose.model('Game');
+var ObjectId = mongoose.Types.ObjectId;
 
 module.exports = {
   options: {
@@ -14,6 +16,15 @@ module.exports = {
             if (err) reject(err);
             else if (user) reject(null);
             else resolve();
+          });
+        });
+      },
+      isClientIdValid: function(clientId) {
+        return new Promise(function(resolve, reject) {
+          Game.findOne({ _id: new ObjectId(clientId) }, function(err, game) {
+            if (err) reject(err);
+            else if (game) resolve();
+            else reject();
           });
         });
       }

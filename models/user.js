@@ -9,8 +9,7 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, index: true },
-  hashedPassword: { type: String, required: true },
-  facebook: {}
+  hashedPassword: { type: String, required: true }
 });
 
 UserSchema.methods = {
@@ -20,6 +19,7 @@ UserSchema.methods = {
     return cipher.final('base64') === this.hashedPassword;
   },
   getAuthToken: function() {
+    // TODO: Add iss, sub, exp...
     return jwt.sign(this, config.secret);
   }
 };

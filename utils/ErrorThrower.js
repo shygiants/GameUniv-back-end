@@ -11,4 +11,8 @@ ErrorThrower.prototype.throw = function(res) {
   });
 };
 
+ErrorThrower.prototype.getStatusCode = function() {
+  return this.status;
+};
+
 module.exports = ErrorThrower;

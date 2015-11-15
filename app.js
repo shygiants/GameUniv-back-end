@@ -30,6 +30,8 @@ var ErrorThrower = require('./utils/ErrorThrower');
 var users = require('./routes/users');
 var authTokens = require('./routes/authTokens');
 var games = require('./routes/games');
+var authCodes = require('./routes/authCodes');
+var accessTokens = require('./routes/accessTokens');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -47,6 +49,8 @@ app.use(expressValidator(validatorOpt));
 app.use('/users', users);
 app.use('/authTokens', authTokens);
 app.use('/games', games);
+app.use('/authCodes', authCodes);
+app.use('/accessTokens', accessTokens);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
