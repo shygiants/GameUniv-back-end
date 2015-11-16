@@ -18,7 +18,7 @@ router.get('/:email', function(req, res, next) {
 }, jwtAuthenticator, function(req, res, next) {
   var authCode = jwt.sign({
     iss: req.query.client_id,
-    sub: req.user.email,
+    sub: req.user._id,
     aud: config.appName,
     exp: Math.floor(new Date() / 1000) + 30,
     typ: 'authCode'

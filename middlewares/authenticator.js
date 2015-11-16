@@ -50,7 +50,7 @@ module.exports = {
               payload.typ === 'authCode') {
             // valid token
             var accessToken = jwt.sign({
-              iss: req.query.client_id,
+              iss: req.body.client_id,
               sub: payload.sub,
               aud: config.appName,
               exp: Math.floor(new Date() / 1000) + config.exp_access_token,
@@ -68,5 +68,20 @@ module.exports = {
         else next(new ErrorThrower('Wrong request', 400));
       }
     );
+  },
+  accessAuthenticator: function(req, res, next) {
+    jwt.verify(req.headers.authorization, config.secret, function(err, payload) {
+      if (err) next(new ErrorThrower(err, 500));
+      else if (payload.aud === config.appName &&
+               payload.exp >= Math.floor(new Date() / 1000) &&
+               payload.typ === 'accessToken') {
+        req.userId = payload.sub;
+        req.gameId = payload.iss;
+        next();
+      } else {
+        // wrong token
+        next(new ErrorThrower('Wrong token', 401))
+      }
+    });
   }
 };

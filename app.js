@@ -19,6 +19,7 @@ require('./middlewares/mongoose')(mongoose);
 // Mongoose Models
 require('./models/user');
 require('./models/game');
+require('./models/moment');
 var validatorOpt = require('./middlewares/express-validator').options;
 // error handler middlewares
 var errorHandlers = require('./middlewares/error-handlers');
@@ -30,6 +31,7 @@ var ErrorThrower = require('./utils/ErrorThrower');
 var users = require('./routes/users');
 var authTokens = require('./routes/authTokens');
 var games = require('./routes/games');
+var moments = require('./routes/moments');
 var authCodes = require('./routes/authCodes');
 var accessTokens = require('./routes/accessTokens');
 
@@ -49,6 +51,7 @@ app.use(expressValidator(validatorOpt));
 app.use('/users', users);
 app.use('/authTokens', authTokens);
 app.use('/games', games);
+app.use('/moments', moments);
 app.use('/authCodes', authCodes);
 app.use('/accessTokens', accessTokens);
 
