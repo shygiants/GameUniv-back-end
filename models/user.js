@@ -1,15 +1,19 @@
-var crypto = require('crypto');
-var config = require('../config');
-var jwt = require('jsonwebtoken');
-var cipher;
-
 var mongoose = require('mongoose');
+var jwt = require('jsonwebtoken');
+var crypto = require('crypto');
+
 var Schema = mongoose.Schema;
+var ObjectId = mongoose.Types.ObjectId;
+var config = require('../config');
+
+var cipher;
 
 var UserSchema = new Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, index: true },
-  hashedPassword: { type: String, required: true }
+  hashedPassword: { type: String, required: true },
+  havePlayed: [{ type: Schema.Types.ObjectId, ref: 'Game' }],
+  following: [{ type: Schema.Types.ObjectId, ref: 'Game' }]
 });
 
 UserSchema.methods = {
@@ -30,7 +34,8 @@ UserSchema.statics = {
     return new Promise(function(resolve, reject) {
       query.exec(function(err, user) {
         if (err) reject(err);
-        else resolve(user);
+        else if (user) resolve(user);
+        else reject();
       });
     });
   },
@@ -74,6 +79,16 @@ UserSchema.statics = {
           var token = jwt.sign(user, config.secret);
           resolve(token);
         }
+      });
+    });
+  },
+  login: function(userId, gameId) {
+    var User = this;
+    return new Promise(function(resolve, reject) {
+      User.findByIdAndUpdate(userId, { $addToSet: { havePlayed: new ObjectId(gameId) }}
+      , function(err, numAffected) {
+        if (err || numAffected == 0) reject(err);
+        else resolve();
       });
     });
   }

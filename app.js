@@ -17,8 +17,8 @@ var app = express();
 // configuration for middlewares
 require('./middlewares/mongoose')(mongoose);
 // Mongoose Models
-require('./models/user');
 require('./models/game');
+require('./models/user');
 require('./models/moment');
 var validatorOpt = require('./middlewares/express-validator').options;
 // error handler middlewares

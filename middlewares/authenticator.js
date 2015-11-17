@@ -5,7 +5,6 @@ var Game = mongoose.model('Game');
 var ErrorThrower = require('../utils/ErrorThrower');
 var config = require('../config');
 
-
 module.exports = {
   jwtAuthenticator: function(req, res, next) {
     User.validateToken(req.headers.authorization).then(function(user) {
@@ -23,9 +22,7 @@ module.exports = {
   },
   localAuthenticator: function(req, res, next) {
     User.getByEmail(req.params.email).then(function(user) {
-      if (!user) {
-        next(new ErrorThrower('Invalid Email', 400));
-      } else if (user.authenticate(req.body.passwd)) {
+      if (user.authenticate(req.body.passwd)) {
         // authentication success
         req.user = user;
         next();
@@ -35,7 +32,8 @@ module.exports = {
       }
     }, function(err) {
       // there is something wrong
-      next(new ErrorThrower(err, 500));
+      if (err) next(new ErrorThrower(err, 500));
+      else next(new ErrorThrower('Invalid Email', 400));
     });
   },
   authorizationAuthenticator: function(req, res, next) {
@@ -49,15 +47,21 @@ module.exports = {
               payload.exp >= Math.floor(new Date() / 1000) &&
               payload.typ === 'authCode') {
             // valid token
-            var accessToken = jwt.sign({
-              iss: req.body.client_id,
-              sub: payload.sub,
-              aud: config.appName,
-              exp: Math.floor(new Date() / 1000) + config.exp_access_token,
-              typ: 'accessToken'
-            }, config.secret);
-            req.accessToken = accessToken;
-            next();
+            var userId = payload.sub;
+            var gameId = req.body.client_id;
+            User.login(userId, gameId).then(function() {
+              var accessToken = jwt.sign({
+                iss: gameId,
+                sub: userId,
+                aud: config.appName,
+                exp: Math.floor(new Date() / 1000) + config.exp_access_token,
+                typ: 'accessToken'
+              }, config.secret);
+              req.accessToken = accessToken;
+              next();
+            }, function(err) {
+              next(new ErrorThrower(err, 500));
+            });
           } else {
             // wrong request
             next(new ErrorThrower('Wrong request', 400));
