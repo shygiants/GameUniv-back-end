@@ -13,10 +13,7 @@ router.post('/', function(req, res, next) {
 
   req.asyncValidationErrors().then(function() {
     Game.register(req.body).then(function(game) {
-      res.json({
-        success: true,
-        game: game
-      });
+      res.json(game);
     }, function(err) {
       next(new ErrorThrower(err, 500));
     });

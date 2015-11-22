@@ -35,22 +35,36 @@ MomentSchema.statics = {
       .populate('game', '-gameSecret')
       .exec(function(err, moment) {
         if (err) reject(err);
-        else if (moment) resolve(moment);
-        else reject();
+        else if (moment) {
+          Moment.populate(moments, {
+            path: 'author.havePlayed',
+            model: 'Game'
+          }, function(err, moments) {
+            if (err) reject(err);
+            else resolve(moments);
+          });
+        } else reject();
       });
     });
   },
   getFeed: function(user) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.find({ game: { $in: user.havePlayed } }, null)
+      Moment.find({ game: { $in: user.havePlayed } })
       .populate('author', '-hashedPassword')
       .populate('game', '-gameSecret')
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
         if (err) reject(err);
-        else if (moments) resolve(moments);
-        else reject();
+        else if (moments) {
+          Moment.populate(moments, {
+            path: 'author.havePlayed',
+            model: 'Game'
+          }, function(err, moments) {
+            if (err) reject(err);
+            else resolve(moments);
+          });
+        } else reject();
       });
     });
   }

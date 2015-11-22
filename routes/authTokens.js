@@ -14,7 +14,6 @@ router.post('/:email', function(req, res, next) {
     });
   }, localAuthenticator, function(req, res, next) {
       res.json({
-        success: true,
         token: req.user.getAuthToken()
       });
   });

@@ -43,16 +43,15 @@ UserSchema.statics = {
     var User = this;
     return new Promise(function(resolve, reject) {
       jwt.verify(token, config.secret, function(err, payload) {
-        if (err) {
-          console.log(err);
-          reject();
-        }
+        if (err) reject();
         else {
           // token is decoded
           User.findOne({
             email: payload.email,
             hashedPassword: payload.hashedPassword
-          }, { email: 1, userName: 1 }, function(err, user){
+          }, { hashedPassword: false })
+          .populate('havePlayed', '-gameSecret')
+          .exec(function(err, user) {
             if (err) reject(err);
             else if (user) resolve(user);
             else reject();

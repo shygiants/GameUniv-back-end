@@ -5,10 +5,7 @@ function ErrorThrower(err, status) {
 
 ErrorThrower.prototype.throw = function(res) {
   res.status(this.status);
-  res.json({
-    success: false,
-    error: this.err
-  });
+  res.json({ error: this.err });
 };
 
 ErrorThrower.prototype.getStatusCode = function() {

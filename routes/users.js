@@ -21,10 +21,7 @@ router.post('/', function(req, res, next) {
   // executes validator
   req.asyncValidationErrors().then(function() {
       User.signup(req.body).then(function(token) {
-        res.json({
-          success: true,
-          token: token
-        });
+        res.json({ token: token });
       }, function(err) {
         next(new ErrorThrower(err, 500));
       });
@@ -43,10 +40,7 @@ router.get('/:email', function(req, res, next) {
         next(new ErrorThrower(err, 400));
       });
     }, jwtAuthenticator, function(req, res, next) {
-        res.json({
-          success: true,
-          user: req.user
-        });
+        res.json(req.user);
       });
 
 module.exports = router;
