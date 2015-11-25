@@ -38,6 +38,16 @@ GameSchema.statics = {
         else reject();
       });
     });
+  },
+  getById: function(gameId) {
+    var Game = this;
+    return new Promise(function(resolve, reject) {
+      Game.findById(gameId, '-gameSecret', function(err, game) {
+        if (err) reject(err);
+        else if (game) resolve(game);
+        else reject();
+      })
+    })
   }
 };
 

@@ -15,7 +15,23 @@ router.post('/', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, accessAuthenticator, function(req, res, next) {
-  Moment.post(req.body.content, req.userId, req.gameId).then(function(moment) {
+  Moment.post(req.body.content, 'text', req.userId, req.gameId).then(function(moment) {
+    console.log(moment);
+    res.json({ moment_id: moment._id });
+  }, function(err) {
+    // database error
+    next(new ErrorThrower(err, 500));
+  });
+});
+
+router.post('/score', function(req, res, next) {
+  req.checkBody('score', 'score Required').notEmpty();
+
+  req.asyncValidationErrors().then(next, function(err) {
+    next(new ErrorThrower(err, 400));
+  });
+}, accessAuthenticator, function(req, res, next) {
+  Moment.post(req.body.score, 'score', req.userId, req.gameId).then(function(moment) {
     console.log(moment);
     res.json({ moment_id: moment._id });
   }, function(err) {

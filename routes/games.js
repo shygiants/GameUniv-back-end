@@ -22,4 +22,13 @@ router.post('/', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 });
+
+router.get('/:gameId', function(req, res, next) {
+  Game.getById(req.params.gameId).then(function(game) {
+    res.json(game);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
+  })
+})
 module.exports = router;

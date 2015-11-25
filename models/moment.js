@@ -3,19 +3,23 @@ var Schema = mongoose.Schema;
 var ObjectId = mongoose.Types.ObjectId;
 var User = mongoose.model('User');
 
+var types = 'score text'.split(' ');
+
 var MomentSchema = new Schema({
   content: { type: String, required: true },
+  type: { type: String, required: true, enum: types},
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   game: { type: Schema.Types.ObjectId, ref: 'Game', required: true, index: true }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 MomentSchema.statics = {
-  post: function(content, userId, gameId) {
+  post: function(content, type, userId, gameId) {
     console.log('shy');
     // console.log(userId);
     // console.log(gameId);
     var posted = new this({
       content: content,
+      type: type,
       author: new ObjectId(userId),
       game: new ObjectId(gameId)
     });
