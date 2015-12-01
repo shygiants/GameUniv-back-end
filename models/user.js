@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var crypto = require('crypto');
+var fs = require('fs');
 
 var Schema = mongoose.Schema;
 var ObjectId = mongoose.Types.ObjectId;
@@ -13,7 +14,8 @@ var UserSchema = new Schema({
   email: { type: String, required: true, index: true },
   hashedPassword: { type: String, required: true },
   havePlayed: [{ type: Schema.Types.ObjectId, ref: 'Game' }],
-  following: [{ type: Schema.Types.ObjectId, ref: 'Game' }]
+  following: [{ type: Schema.Types.ObjectId, ref: 'Game' }],
+  profilePhoto: String
 });
 
 UserSchema.methods = {
@@ -25,6 +27,24 @@ UserSchema.methods = {
   getAuthToken: function() {
     // TODO: Add iss, sub, exp...
     return jwt.sign(this, config.secret);
+  },
+  setProfilePhoto: function(filename) {
+    var user = this;
+    return new Promise(function(resolve, reject) {
+      var original = user.profilePhoto;
+      user.profilePhoto = filename;
+      user.save(function(err, user, numAffected) {
+        if (err) reject(err);
+        else if (user) {
+          if (original != null) fs.unlink(original, function(err) {
+            if (err) reject(err);
+            else resolve(user);
+          })
+          else resolve(user);
+        }
+        else reject();
+      });
+    });
   }
 };
 

@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var mongoose = require('mongoose');
+var multer  = require('multer');
+
 var User = mongoose.model('User');
 var jwt = require('jsonwebtoken');
 var config = require('../config');
@@ -47,5 +49,20 @@ router.get('/:email', function(req, res, next) {
         else next(new ErrorThrower('Not Found', 404));
       });
     });
+
+  router.put('/:email/profilePhotos', jwtAuthenticator,
+    multer({ dest: 'profilePhotos/' }).single('profile_photo'), function(req, res, next) {
+    if (req.user.email !== req.params.email) {
+      next(new ErrorThrower('Wrong Token', 401));
+      return;
+    }
+
+    req.user.setProfilePhoto(req.file.path).then(function(user) {
+      res.json(user.filename);
+    }, function(err) {
+      if (err) next(new ErrorThrower(err, 500));
+      else next(new ErrorThrower('Not Found', 404));
+    });
+  });
 
 module.exports = router;
