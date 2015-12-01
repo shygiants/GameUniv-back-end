@@ -36,11 +36,16 @@ router.get('/:email', function(req, res, next) {
 
     // executes validator
     req.asyncValidationErrors().then(next, function(err) {
-        // validation error
-        next(new ErrorThrower(err, 400));
+      // validation error
+      next(new ErrorThrower(err, 400));
       });
     }, jwtAuthenticator, function(req, res, next) {
-        res.json(req.user);
+      User.getByEmail(req.params.email).then(function(user) {
+        res.json(user);
+      }, function(err) {
+        if (err) next(new ErrorThrower(err, 500));
+        else next(new ErrorThrower('Not Found', 404));
       });
+    });
 
 module.exports = router;

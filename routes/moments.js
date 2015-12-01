@@ -50,17 +50,26 @@ router.get('/:momentId', function(req, res, next) {
   });
 });
 
-router.get('/forUser/:email', jwtAuthenticator, function(req, res, next) {
-  User.getByEmail(req.params.email).then(function(user) {
-    Moment.getFeed(user).then(function(moments) {
-      res.json(moments);
-    }, function(err) {
-      if (err) next(new ErrorThrower(err, 500));
-      else next(new ErrorThrower('Not Found', 404));
-    });
+router.get('/feed/users/:email', jwtAuthenticator, function(req, res, next) {
+  if (req.user.email !== req.params.email) {
+    next(new ErrorThrower('Wrong Token', 401));
+    return;
+  }
+
+  Moment.getFeed(req.user).then(function(moments) {
+    res.json(moments);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));
-    else next(new ErrorThrower('Wrong Token', 401));
+    else next(new ErrorThrower('Not Found', 404));
+  });
+});
+
+router.get('/timeline/users/:email', jwtAuthenticator, function(req, res, next) {
+  Moment.getTimeline(req.user).then(function(moments) {
+    res.json(moments);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
   });
 });
 

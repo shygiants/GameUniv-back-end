@@ -8,12 +8,8 @@ var config = require('../config');
 module.exports = {
   jwtAuthenticator: function(req, res, next) {
     User.validateToken(req.headers.authorization).then(function(user) {
-      if (user.email === req.params.email) {
-        // valid token
-        req.user = user;
-        next();
-      } else
-        next(new ErrorThrower('Wrong Token', 401));
+      req.user = user;
+      next();
     }, function(err) {
       // there is something wrong
       if (err) next(new ErrorThrower(err, 500));
@@ -21,19 +17,12 @@ module.exports = {
     });
   },
   localAuthenticator: function(req, res, next) {
-    User.getByEmail(req.params.email).then(function(user) {
-      if (user.authenticate(req.body.passwd)) {
-        // authentication success
-        req.user = user;
-        next();
-      } else {
-        // wrong password
-        next(new ErrorThrower('Wrong password', 400));
-      }
+    User.authenticate(req.params.email, req.body.passwd).then(function(user) {
+      req.user = user;
+      next();
     }, function(err) {
-      // there is something wrong
       if (err) next(new ErrorThrower(err, 500));
-      else next(new ErrorThrower('Invalid Email', 400));
+      else next(new ErrorThrower('Wrong Credential', 400));
     });
   },
   authorizationAuthenticator: function(req, res, next) {

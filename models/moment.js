@@ -71,6 +71,27 @@ MomentSchema.statics = {
         } else reject();
       });
     });
+  },
+  getTimeline: function(user) {
+    var Moment = this;
+    return new Promise(function(resolve, reject) {
+      Moment.find({ author: user._id })
+      .populate('author', '-hashedPassword')
+      .populate('game', '-gameSecret')
+      .sort({ created_at: -1 })
+      .exec(function(err, moments) {
+        if (err) reject(err);
+        else if (moments) {
+          Moment.populate(moments, {
+            path: 'author.havePlayed',
+            model: 'Game'
+          }, function(err, moments) {
+            if (err) reject(err);
+            else resolve(moments);
+          });
+        } else reject();
+      });
+    });
   }
 };
 

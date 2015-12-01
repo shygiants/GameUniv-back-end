@@ -16,6 +16,11 @@ router.get('/:email', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, jwtAuthenticator, function(req, res, next) {
+  if (req.user.email !== req.params.email) {
+    next(new ErrorThrower('Wrong Token', 401));
+    return;
+  }
+
   var authCode = jwt.sign({
     iss: req.query.client_id,
     sub: req.user._id,

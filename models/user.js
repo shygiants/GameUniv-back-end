@@ -30,11 +30,23 @@ UserSchema.methods = {
 
 UserSchema.statics = {
   getByEmail: function(email) {
-    var query = this.findOne({ email: email });
+    var User = this;
     return new Promise(function(resolve, reject) {
-      query.exec(function(err, user) {
+      User.findOne({ email: email }, '-hashedPassword')
+      .populate('havePlayed', '-gameSecret')
+      .exec(function(err, user) {
         if (err) reject(err);
         else if (user) resolve(user);
+        else reject();
+      });
+    });
+  },
+  authenticate: function(email, plainPasswd) {
+    var User = this;
+    return new Promise(function(resolve, reject) {
+      User.findOne({ email: email }, function(err, user) {
+        if (err) reject(err);
+        else if (user && user.authenticate(plainPasswd)) resolve(user);
         else reject();
       });
     });
