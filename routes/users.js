@@ -65,4 +65,19 @@ router.get('/:email', function(req, res, next) {
     });
   });
 
+  router.get('/:email/profilePhotos', jwtAuthenticator,
+  function(req, res, next) {
+    User.getByEmail(req.params.email).then(function(user) {
+
+      var options = { root: __dirname + '/../' };
+
+      res.sendFile(user.profilePhoto, options, function(err) {
+        if (err) next(new ErrorThrower(err, 500));
+      });
+    }, function(err) {
+      if (err) next(new ErrorThrower(err, 500));
+      else next(new ErrorThrower('Not Found', 404));
+    });
+  });
+
 module.exports = router;
