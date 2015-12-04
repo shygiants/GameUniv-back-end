@@ -56,8 +56,12 @@ app.use('/authCodes', authCodes);
 app.use('/accessTokens', accessTokens);
 
 app.get('/', function(req, res, next) {
-  res.render('index', { title: 'GameUniv' });
+  res.render('layout');
 });
+
+app.get('/views/:viewName', function(req, res, next) {
+  res.render(req.params.viewName);
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
