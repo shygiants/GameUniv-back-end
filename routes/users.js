@@ -50,34 +50,33 @@ router.get('/:email', function(req, res, next) {
       });
     });
 
-  router.put('/:email/profilePhotos', jwtAuthenticator,
-    multer({ dest: 'profilePhotos/' }).single('profile_photo'), function(req, res, next) {
-    if (req.user.email !== req.params.email) {
-      next(new ErrorThrower('Wrong Token', 401));
-      return;
-    }
+router.put('/:email/profilePhotos', jwtAuthenticator,
+  multer({ dest: 'profilePhotos/' }).single('profile_photo'), function(req, res, next) {
+  if (req.user.email !== req.params.email) {
+    next(new ErrorThrower('Wrong Token', 401));
+    return;
+  }
 
-    req.user.setProfilePhoto(req.file.path).then(function(user) {
-      res.json(user.filename);
-    }, function(err) {
-      if (err) next(new ErrorThrower(err, 500));
-      else next(new ErrorThrower('Not Found', 404));
-    });
+  req.user.setProfilePhoto(req.file.path).then(function(user) {
+    res.json(user.filename);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
   });
+});
 
-  router.get('/:email/profilePhotos', jwtAuthenticator,
-  function(req, res, next) {
-    User.getByEmail(req.params.email).then(function(user) {
+router.get('/:email/profilePhotos', function(req, res, next) {
+  User.getByEmail(req.params.email).then(function(user) {
 
-      var options = { root: __dirname + '/../' };
+    var options = { root: __dirname + '/../' };
 
-      res.sendFile(user.profilePhoto, options, function(err) {
-        if (err) next(new ErrorThrower(err, 500));
-      });
-    }, function(err) {
+    res.sendFile(user.profilePhoto, options, function(err) {
       if (err) next(new ErrorThrower(err, 500));
-      else next(new ErrorThrower('Not Found', 404));
     });
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
   });
+});
 
 module.exports = router;

@@ -1,2 +1,8 @@
-h1 {{title}}
-p Welcome to {{title}}
+div(class='row section')
+  div(class='col s2')
+    img(class='circle', ng-src='users/{{user.email}}/profilePhotos', height='150', width='150')
+  div(class='col s10')
+    h4 {{user.userName}}
+    h5 {{user.email}}
+div(class='row section')
+    

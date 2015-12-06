@@ -1,16 +1,21 @@
 var gameUniv = angular.module('gameUniv', [
   'ngRoute',
-  'gameUnivControllers'
+  'gameUnivControllers',
+  'gameUnivServices'
 ]);
 
 gameUniv.config(['$routeProvider',
   function($routeProvider) {
-    $routeProvider.
-      when('/app', {
+    $routeProvider
+      .when('/app', {
         templateUrl: 'views/index',
         controller: 'HomeCtrl'
-      }).
-      otherwise({
+      })
+      .when('/app/login', {
+        templateUrl: 'views/login',
+        controller: 'AuthCtrl'
+      })
+      .otherwise({
         redirectTo: '/app'
       });
   }]);

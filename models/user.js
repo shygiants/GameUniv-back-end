@@ -15,7 +15,8 @@ var UserSchema = new Schema({
   hashedPassword: { type: String, required: true },
   havePlayed: [{ type: Schema.Types.ObjectId, ref: 'Game' }],
   following: [{ type: Schema.Types.ObjectId, ref: 'Game' }],
-  profilePhoto: String
+  profilePhoto: String,
+  developed: [{ type: Schema.Types.ObjectId, ref: 'Game' }]
 });
 
 UserSchema.methods = {
@@ -52,7 +53,7 @@ UserSchema.statics = {
   getByEmail: function(email) {
     var User = this;
     return new Promise(function(resolve, reject) {
-      User.findOne({ email: email }, '-hashedPassword')
+      User.findOne({ email: email }, '-hashedPassword -developed')
       .populate('havePlayed', '-gameSecret')
       .exec(function(err, user) {
         if (err) reject(err);
@@ -75,8 +76,9 @@ UserSchema.statics = {
     var User = this;
     return new Promise(function(resolve, reject) {
       jwt.verify(token, config.secret, function(err, payload) {
-        if (err) reject();
+        if (err) reject(err);
         else {
+          console.log(payload);
           // token is decoded
           User.findOne({
             email: payload.email,
@@ -84,6 +86,7 @@ UserSchema.statics = {
           }, { hashedPassword: false })
           .populate('havePlayed', '-gameSecret')
           .exec(function(err, user) {
+            console.log(user);
             if (err) reject(err);
             else if (user) resolve(user);
             else reject();
