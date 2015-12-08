@@ -65,7 +65,16 @@ router.get('/feed/users/:email', jwtAuthenticator, function(req, res, next) {
 });
 
 router.get('/timeline/users/:email', jwtAuthenticator, function(req, res, next) {
-  Moment.getTimeline(req.user).then(function(moments) {
+  Moment.getTimelineForUser(req.user).then(function(moments) {
+    res.json(moments);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
+  });
+});
+
+router.get('/timeline/games/:gameId', jwtAuthenticator, function(req, res, next) {
+  Moment.getTimelineForGame(req.params.gameId).then(function(moments) {
     res.json(moments);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));

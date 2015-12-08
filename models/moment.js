@@ -32,8 +32,8 @@ MomentSchema.statics = {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.findOne({ _id: new ObjectId(momentId) })
-      .populate('author', '-hashedPassword')
-      .populate('game', '-gameSecret')
+      .populate('author', '-hashedPassword -developed -profilePhoto')
+      .populate('game', '-gameSecret -gameIcon')
       .exec(function(err, moment) {
         if (err) reject(err);
         else if (moment) {
@@ -52,8 +52,8 @@ MomentSchema.statics = {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.find({ game: { $in: user.havePlayed } })
-      .populate('author', '-hashedPassword')
-      .populate('game', '-gameSecret')
+      .populate('author', '-hashedPassword -developed -profilePhoto')
+      .populate('game', '-gameSecret -gameIcon')
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
         if (err) reject(err);
@@ -69,12 +69,33 @@ MomentSchema.statics = {
       });
     });
   },
-  getTimeline: function(user) {
+  getTimelineForUser: function(user) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.find({ author: user._id })
-      .populate('author', '-hashedPassword')
-      .populate('game', '-gameSecret')
+      .populate('author', '-hashedPassword -developed -profilePhoto')
+      .populate('game', '-gameSecret -gameIcon')
+      .sort({ created_at: -1 })
+      .exec(function(err, moments) {
+        if (err) reject(err);
+        else if (moments) {
+          Moment.populate(moments, {
+            path: 'author.havePlayed',
+            model: 'Game'
+          }, function(err, moments) {
+            if (err) reject(err);
+            else resolve(moments);
+          });
+        } else reject();
+      });
+    });
+  },
+  getTimelineForGame: function(gameId) {
+    var Moment = this;
+    return new Promise(function(resolve, reject) {
+      Moment.find({ game: new ObjectId(gameId) })
+      .populate('author', '-hashedPassword -developed -profilePhoto')
+      .populate('game', '-gameSecret -gameIcon')
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
         if (err) reject(err);
