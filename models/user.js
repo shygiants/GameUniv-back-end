@@ -40,7 +40,7 @@ UserSchema.methods = {
           if (original != null) fs.unlink(original, function(err) {
             if (err) reject(err);
             else resolve(user);
-          })
+          });
           else resolve(user);
         }
         else reject();
@@ -50,12 +50,16 @@ UserSchema.methods = {
 };
 
 UserSchema.statics = {
-  getByEmail: function(email) {
+  getByEmail: function(email, developed) {
     var User = this;
     return new Promise(function(resolve, reject) {
-      User.findOne({ email: email }, '-hashedPassword -developed')
-      .populate('havePlayed', '-gameSecret')
-      .exec(function(err, user) {
+      var projection = '-hashedPassword -profilePhoto';
+      projection += (developed)? '' : ' -developed';
+
+      var query = User.findOne({ email: email }, projection)
+      .populate('havePlayed', '-gameSecret');
+      if (developed) query = query.populate('developed', '-gameSecret');
+      query.exec(function(err, user) {
         if (err) reject(err);
         else if (user) resolve(user);
         else reject();
@@ -78,15 +82,14 @@ UserSchema.statics = {
       jwt.verify(token, config.secret, function(err, payload) {
         if (err) reject(err);
         else {
-          console.log(payload);
           // token is decoded
           User.findOne({
             email: payload.email,
             hashedPassword: payload.hashedPassword
-          }, { hashedPassword: false })
+          }, { hashedPassword: false, profilePhoto: false })
           .populate('havePlayed', '-gameSecret')
+          .populate('developed')
           .exec(function(err, user) {
-            console.log(user);
             if (err) reject(err);
             else if (user) resolve(user);
             else reject();
@@ -125,6 +128,17 @@ UserSchema.statics = {
         else resolve();
       });
     });
+  },
+  getProfilePhoto: function(email) {
+    var User = this;
+    return new Promise(function(resolve, reject) {
+      User.findOne({ email: email }, 'profilePhoto')
+      .exec(function(err, user) {
+        if (err) reject(err);
+        else if (user) resolve(user.profilePhoto);
+        else reject();
+      });
+    })
   }
 };
 

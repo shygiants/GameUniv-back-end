@@ -5,4 +5,10 @@ div(class='row section')
     h4 {{user.userName}}
     h5 {{user.email}}
 div(class='row section')
+  h2 게임
+  ul(class='collection')
+    li(class='collection-item avatar', ng-repeat='game in user.developed', ng-click='gameDetail(game._id)')
+      i(class='material-icons circle') folder
+      span(class='title') {{game.gameName}}
+      p {{game._id}}
     

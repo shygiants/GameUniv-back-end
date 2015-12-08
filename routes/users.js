@@ -42,7 +42,7 @@ router.get('/:email', function(req, res, next) {
       next(new ErrorThrower(err, 400));
       });
     }, jwtAuthenticator, function(req, res, next) {
-      User.getByEmail(req.params.email).then(function(user) {
+      User.getByEmail(req.params.email, req.query.developed).then(function(user) {
         res.json(user);
       }, function(err) {
         if (err) next(new ErrorThrower(err, 500));
@@ -66,11 +66,10 @@ router.put('/:email/profilePhotos', jwtAuthenticator,
 });
 
 router.get('/:email/profilePhotos', function(req, res, next) {
-  User.getByEmail(req.params.email).then(function(user) {
-
+  User.getProfilePhoto(req.params.email).then(function(profilePhoto) {
     var options = { root: __dirname + '/../' };
 
-    res.sendFile(user.profilePhoto, options, function(err) {
+    res.sendFile(profilePhoto, options, function(err) {
       if (err) next(new ErrorThrower(err, 500));
     });
   }, function(err) {

@@ -1,7 +1,8 @@
 var gameUniv = angular.module('gameUniv', [
   'ngRoute',
   'gameUnivControllers',
-  'gameUnivServices'
+  'gameUnivServices',
+  'gameUnivDirectives'
 ]);
 
 gameUniv.config(['$routeProvider',
@@ -15,7 +16,16 @@ gameUniv.config(['$routeProvider',
         templateUrl: 'views/login',
         controller: 'AuthCtrl'
       })
+      .when('/app/games/:gameId', {
+        templateUrl: 'views/gameDetail',
+        controller: 'GameCtrl'
+      })
       .otherwise({
         redirectTo: '/app'
       });
+  }]);
+
+gameUniv.config(['$httpProvider',
+  function($httpProvider) {
+    $httpProvider.interceptors.push('AuthInterceptor');
   }]);

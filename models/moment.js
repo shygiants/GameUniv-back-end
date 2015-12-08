@@ -14,9 +14,6 @@ var MomentSchema = new Schema({
 
 MomentSchema.statics = {
   post: function(content, type, userId, gameId) {
-    console.log('shy');
-    // console.log(userId);
-    // console.log(gameId);
     var posted = new this({
       content: content,
       type: type,

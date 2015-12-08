@@ -3,7 +3,7 @@ html(ng-app='gameUniv')
   head
     meta(charset='utf8')
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
-    title {{title}}
+    title GameUniv
     link(rel='stylesheet', href='http://fonts.googleapis.com/icon?family=Material+Icons')
     link(type='text/css', rel='stylesheet', href='bower_components/Materialize/dist/css/materialize.min.css', media='screen,projection')
     link(type='text/css', rel='stylesheet', href='css/app.css')
@@ -16,11 +16,13 @@ html(ng-app='gameUniv')
     script(src='js/app.js')
     script(src='js/controllers.js')
     script(src='js/services.js')
+    script(src='js/directives.js')
+    script(src='js/angular-file.js')
   body
     header
-      nav
-        div(class='nav-wrapper indigo')
-          a(href='/', class='brand-logo', style='padding-left: 10px') GameUniv
+      nav(class='indigo')
+        div(class='container nav-wrapper')
+          a(href='/', class='brand-logo') GameUniv
           ul(id='nav-mobile', class='right hide-on-med-and-down')
     main
       div(class='container')

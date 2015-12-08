@@ -1,0 +1,25 @@
+div(class='row section')
+  div(class='col s2')
+    img(height='150', width='150', ng-src='games/{{game._id}}/gameIcons')
+  div(class='col s10')
+    div(class='row')
+      div(class='col s12')
+        h4 {{game.gameName}}
+    div(class='row')
+      div(class='col s3')
+        h6 Game ID 
+        div(class='chip') {{game._id}}
+      div(class='col s3')
+        h6 Game Secret 
+        div(class='chip') {{game.gameSecret}}
+div(class='row section')
+  form(ng-submit='submit()')
+    div(class='file-field input-field')
+      div(class='btn')
+        span 게임 아이콘
+        input(type='file', file-model='game_icon')
+      div(class='file-path-wrapper')
+        input(class='file-path validate', type='text')
+    button(class='btn waves-effect waves-light', type='submit', name='action') 앱 아이콘 등록
+      i(class='material-icons right')
+        

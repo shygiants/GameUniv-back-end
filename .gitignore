@@ -84,6 +84,7 @@ node_modules
 
 # Content
 /profilePhotos
+/gameIcons
 
 ### Bower ###
 bower_components
