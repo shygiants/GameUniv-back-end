@@ -25,10 +25,10 @@ gameUnivServices.factory('Auth', ['$resource',
 
 gameUnivServices.factory('User', ['$resource', '$window',
   function($resource, $window) {
-    return $resource('users/:email', { email: '@email' }, {
+    return $resource('users/:email', { email: $window.sessionStorage.email }, {
       getUser: {
         method: 'GET',
-        params: { email: $window.sessionStorage.email, developed: true }
+        params: { developed: true }
       }
     });
   }]);

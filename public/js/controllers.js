@@ -16,7 +16,7 @@ gameUnivControllers.controller('HomeCtrl', ['$scope', '$window', '$location', 'U
         delete $window.sessionStorage.email;
         delete $window.sessionStorage.token;
         $location.path('app/login');
-      })
+      });
     }
   }]);
 
@@ -55,7 +55,7 @@ gameUnivControllers.controller('GameCtrl', ['$scope', '$window', '$location', '$
         delete $window.sessionStorage.email;
         delete $window.sessionStorage.token;
         $location.path('app/login');
-      })
+      });
     }
 
   }]);

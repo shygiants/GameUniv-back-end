@@ -14,5 +14,5 @@ gameUnivDirectives.directive('fileModel', ['$parse',
                 });
             });
       }
-    }
+    };
 }]);
