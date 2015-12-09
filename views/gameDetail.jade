@@ -14,12 +14,20 @@ div(class='row section')
         div(class='chip') {{game.gameSecret}}
 div(class='row section')
   form(ng-submit='submit()')
-    div(class='file-field input-field')
+    div(class='file-field input-field col s4')
       div(class='btn')
         span 게임 아이콘
         input(type='file', file-model='game_icon')
       div(class='file-path-wrapper')
         input(class='file-path validate', type='text')
-    button(class='btn waves-effect waves-light', type='submit', name='action') 앱 아이콘 등록
-      i(class='material-icons right')
+    div(class='input-field col s2')
+      button(class='btn waves-effect waves-light', type='submit', name='action') 앱 아이콘 등록
+        i(class='material-icons right')
+div(class='row section')
+  h2 업적
+  ul(class='collection')
+    li(class='collection-item avatar', ng-repeat='', ng-click='')
+      i(class='material-icons circle') folder
+      span(class='title') {{}}
+      p {{}}
         

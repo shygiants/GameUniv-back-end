@@ -57,7 +57,7 @@ UserSchema.statics = {
       projection += (developed)? '' : ' -developed';
 
       var query = User.findOne({ email: email }, projection)
-      .populate('havePlayed', '-gameSecret');
+      .populate('havePlayed', '-gameSecret -gameIcon');
       if (developed) query = query.populate('developed', '-gameSecret');
       query.exec(function(err, user) {
         if (err) reject(err);
@@ -87,7 +87,7 @@ UserSchema.statics = {
             email: payload.email,
             hashedPassword: payload.hashedPassword
           }, { hashedPassword: false, profilePhoto: false })
-          .populate('havePlayed', '-gameSecret')
+          .populate('havePlayed', '-gameSecret -gameIcon')
           .populate('developed')
           .exec(function(err, user) {
             if (err) reject(err);
