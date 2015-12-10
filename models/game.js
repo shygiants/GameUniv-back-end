@@ -59,6 +59,18 @@ GameSchema.statics = {
       });
     });
   },
+  getAllGames: function() {
+    var Game = this;
+    return new Promise(function(resolve, reject) {
+      Game.find({}, '-gameSecret -gameIcon -achievements')
+      .exec(function(err, games) {
+        if (err) reject(err);
+        else if (games) resolve(games);
+        else reject();
+      });
+
+    });
+  },
   getById: function(gameId) {
     var Game = this;
     return new Promise(function(resolve, reject) {

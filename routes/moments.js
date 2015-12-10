@@ -82,7 +82,7 @@ router.get('/feed/users/:email', jwtAuthenticator, function(req, res, next) {
 });
 
 router.get('/timeline/users/:email', jwtAuthenticator, function(req, res, next) {
-  Moment.getTimelineForUser(req.user).then(function(moments) {
+  Moment.getTimelineForUser(req.params.email).then(function(moments) {
     res.json(moments);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));

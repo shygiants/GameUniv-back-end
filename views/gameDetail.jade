@@ -31,7 +31,7 @@ div(class='row section')
     div(class='col s12')   
       ul(class='collection')
         li(class='collection-item avatar', ng-repeat='achievement in game.achievements', ng-click='')
-          i(class='material-icons circle') folder
+          img(class='circle', ng-src='img/ic_achievement.png')
           span(class='title') {{achievement.title}}
           p {{achievement.description}}
             br/ 

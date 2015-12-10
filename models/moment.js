@@ -89,27 +89,34 @@ MomentSchema.statics = {
       });
     });
   },
-  getTimelineForUser: function(user) {
+  getTimelineForUser: function(email) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.find({ author: user._id })
-      .populate('author', '-hashedPassword -developed -profilePhoto')
-      .populate('game', '-gameSecret -gameIcon -achievements')
-      .populate('achievement', '-icon')
-      .sort({ created_at: -1 })
-      .exec(function(err, moments) {
+      User.getByEmail(email).then(function(user) {
+        Moment.find({ author: user._id })
+        .populate('author', '-hashedPassword -developed -profilePhoto')
+        .populate('game', '-gameSecret -gameIcon -achievements')
+        .populate('achievement', '-icon')
+        .sort({ created_at: -1 })
+        .exec(function(err, moments) {
+          if (err) reject(err);
+          else if (moments) {
+            Moment.populate(moments, {
+              path: 'author.havePlayed',
+              model: 'Game',
+              select: '-gameSecret -gameIcon -achievements'
+            }, function(err, moments) {
+              if (err) reject(err);
+              else resolve(moments);
+            });
+          } else reject();
+        });
+      }, function(err) {
         if (err) reject(err);
-        else if (moments) {
-          Moment.populate(moments, {
-            path: 'author.havePlayed',
-            model: 'Game',
-            select: '-gameSecret -gameIcon -achievements'
-          }, function(err, moments) {
-            if (err) reject(err);
-            else resolve(moments);
-          });
-        } else reject();
+        else reject();
       });
+
+
     });
   },
   getTimelineForGame: function(gameId) {

@@ -26,6 +26,15 @@ router.post('/', function(req, res, next) {
   });
 });
 
+router.get('/', function(req, res, next) {
+  Game.getAllGames().then(function(games) {
+    res.json(games);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
+  });
+});
+
 router.get('/:gameId', function(req, res, next) {
   if (req.query.development) {
     next();
