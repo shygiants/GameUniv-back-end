@@ -57,7 +57,7 @@ UserSchema.statics = {
       projection += (developed)? '' : ' -developed';
 
       var query = User.findOne({ email: email }, projection)
-      .populate('havePlayed', '-gameSecret -gameIcon');
+      .populate('havePlayed', '-gameSecret -gameIcon -achievements');
       if (developed) query = query.populate('developed', '-gameSecret');
       query.exec(function(err, user) {
         if (err) reject(err);

@@ -25,7 +25,7 @@ router.post('/', function(req, res, next) {
 });
 
 router.post('/score', function(req, res, next) {
-  req.checkBody('score', 'score Required').notEmpty();
+  req.checkBody('score', 'Score Required').notEmpty();
 
   req.asyncValidationErrors().then(next, function(err) {
     next(new ErrorThrower(err, 400));
@@ -36,6 +36,23 @@ router.post('/score', function(req, res, next) {
     res.json({ moment_id: moment._id });
   }, function(err) {
     // database error
+    next(new ErrorThrower(err, 500));
+  });
+});
+
+router.post('/achievements', function(req, res, next) {
+  // TODO: Check achievement id
+  req.checkBody('achievement', 'Achievement Required').notEmpty();
+
+  req.asyncValidationErrors().then(next, function(err) {
+    next(new ErrorThrower(err, 400));
+  });
+}, accessAuthenticator, function(req, res, next) {
+  Moment.postAchievement(req.body.achievement, 'achievement', req.userId, req.gameId)
+  .then(function(moment) {
+    console.log(moment);
+    res.json({ moment_id: moment._id });
+  }, function(err) {
     next(new ErrorThrower(err, 500));
   });
 });
