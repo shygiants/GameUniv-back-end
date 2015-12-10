@@ -49,6 +49,28 @@ gameUnivControllers.controller('GameCtrl', ['$scope', '$window', '$location', '$
         $scope.submit = function() {
           var file = $scope.game_icon;
           UploadFile.uploadGameIcon($scope.game._id, file);
+        };
+        $scope.openModal = function() {
+          $('#new-achievement-modal').openModal();
+        }
+
+        $scope.addAchievement = function() {
+          var achievement = {
+            title: $scope.title,
+            desc: $scope.desc,
+            point: $scope.point
+          }
+
+          Game.addAchievement({ gameId: $scope.game._id }, achievement)
+          .$promise.then(function(data) {
+            console.log(data);
+            achievement._id = data.achievementId;
+            achievement.description = $scope.desc;
+            $scope.game.achievements.push(achievement);
+            $scope.title = '';
+            $scope.desc = '';
+            $scope.point = '';
+          });
         }
       }, function(err) {
         console.log(err);

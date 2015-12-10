@@ -39,6 +39,11 @@ gameUnivServices.factory('Game', ['$resource', '$window',
       getGame: {
         method: 'GET',
         params: { development: true }
+      },
+      addAchievement: {
+        method: 'POST',
+        url: 'games/:gameId/achievements',
+        params: { gameId: '@gameId' }
       }
     });
   }]);

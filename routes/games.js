@@ -3,6 +3,7 @@ var router = express.Router();
 var multer  = require('multer');
 var mongoose = require('mongoose');
 var Game = mongoose.model('Game');
+var Achievement = mongoose.model('Achievement');
 var ErrorThrower = require('../utils/ErrorThrower');
 var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
 
@@ -41,7 +42,7 @@ router.get('/:gameId', function(req, res, next) {
     return (game._id == req.params.gameId);
   });
 
-  if (typeof games !== 'undefined' || games.length > 0)
+  if (typeof games !== 'undefined' && games.length > 0)
     res.json(games[0]);
   else
     next(new ErrorThrower('Not Found', 404))
@@ -56,7 +57,7 @@ router.put('/:gameId/gameIcons', multer({
       return (game._id == req.params.gameId);
     });
 
-    if (typeof games !== 'undefined' || games.length > 0) {
+    if (typeof games !== 'undefined' && games.length > 0) {
       var game = games[0];
       console.log(req.file.path);
       game.setGameIcon(req.file.path).then(function(game) {
@@ -83,5 +84,40 @@ router.get('/:gameId/gameIcons', function(req, res, next) {
   });
 });
 
+router.post('/:gameId/achievements', function(req, res, next) {
+  // TODO: Validation
+  req.checkBody('title', 'Title Required').notEmpty();
+  req.checkBody('desc', 'Description Required').notEmpty();
+  req.checkBody('point', 'Point Required').notEmpty();
+
+  req.asyncValidationErrors().then(next, function(err) {
+    next(new ErrorThrower(err, 400));
+  });
+}, jwtAuthenticator, function(req, res, next) {
+  var games = req.user.developed.filter(function(game) {
+    return (game._id == req.params.gameId);
+  });
+
+  if (typeof games === 'undefined' || games.length == 0) {
+    next(new ErrorThrower('Not Found', 404));
+    return;
+  }
+  var body = req.body;
+    Achievement.create(body.title, body.desc, body.point).then(
+      function(achievementId) {
+        Game.addAchievement(req.params.gameId, achievementId).then(
+          function() {
+            res.json({ achievementId: achievementId });
+          }, function(err) {
+            // TODO: Delete created achievement
+            if (err) next(new ErrorThrower(err, 500));
+            else next(new ErrorThrower('Not Found', 404));
+          }
+        );
+      }, function (err) {
+        if (err) next(new ErrorThrower(err, 500));
+        else next(new ErrorThrower('Something Wrong', 500));
+      });
+});
 
 module.exports = router;

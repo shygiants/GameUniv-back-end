@@ -20,14 +20,43 @@ div(class='row section')
         input(type='file', file-model='game_icon')
       div(class='file-path-wrapper')
         input(class='file-path validate', type='text')
-    div(class='input-field col s2')
+    div(class='input-field col s3')
       button(class='btn waves-effect waves-light', type='submit', name='action') 앱 아이콘 등록
         i(class='material-icons right')
 div(class='row section')
   h2 업적
-  ul(class='collection')
-    li(class='collection-item avatar', ng-repeat='', ng-click='')
-      i(class='material-icons circle') folder
-      span(class='title') {{}}
-      p {{}}
+  a(class='waves-effect waves-light btn', ng-click='openModal()') 새 업적
+    i(class='material-icons left') note_add 
+  div(class='row section') 
+    div(class='col s12')   
+      ul(class='collection')
+        li(class='collection-item avatar', ng-repeat='achievement in game.achievements', ng-click='')
+          i(class='material-icons circle') folder
+          span(class='title') {{achievement.title}}
+          p {{achievement.description}}
+            br/ 
+            div(class='chip') {{achievement._id}}
+          span(class='secondary-content') {{achievement.point}}점
         
+div(id='new-achievement-modal', class='modal')
+  div(class='modal-content')
+    h4 새 업적
+    div(class='row')
+      form(class='col s12')
+        div(class='row')
+          div(class='input-field col s6')
+            input(id='title', type='text', ng-model='title')
+            label(for='title') 이름
+          div(class='input-field col s6')
+            input(id='point', type='text', ng-model='point')
+            label(for='point') 점수
+        div(class='row')
+          div(class='input-field col s12')
+            input(id='desc', type='text', ng-model='desc')
+            label(for='desc') 설명
+            
+  div(class='modal-footer')
+    a(class='modal-action modal-close waves-effect btn-flat', ng-click='addAchievement()') 추가
+    a(class='modal-action modal-close waves-effect btn-flat') 취소
+    
+      

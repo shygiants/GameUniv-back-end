@@ -8,7 +8,8 @@ var GameSchema = new Schema({
   gameName: { type: String, required: true },
   gameSecret: { type: String, required: true },
   contactEmail: { type: String, required: true },
-  gameIcon: String
+  gameIcon: String,
+  achievements: [{ type: Schema.Types.ObjectId, ref: 'Achievement' }]
 });
 
 GameSchema.methods = {
@@ -61,12 +62,14 @@ GameSchema.statics = {
   getById: function(gameId) {
     var Game = this;
     return new Promise(function(resolve, reject) {
-      Game.findById(gameId, '-gameSecret', function(err, game) {
+      Game.findById(gameId, '-gameSecret -gameIcon')
+      .populate('achievements', '-icon')
+      .exec(function(err, game) {
         if (err) reject(err);
         else if (game) resolve(game);
         else reject();
-      })
-    })
+      });
+    });
   },
   getGameIcon: function(gameId) {
     var Game = this;
@@ -75,6 +78,18 @@ GameSchema.statics = {
         if (err) reject(err);
         else if (game) resolve(game.gameIcon);
         else reject();
+      });
+    });
+  },
+  addAchievement: function(gameId, achievementId) {
+    var Game = this;
+    return new Promise(function(resolve, reject) {
+      Game.findByIdAndUpdate(gameId, {
+        $addToSet: { achievements: new ObjectId(achievementId) }
+      }, function(err, numAffected) {
+        if (err) reject(err);
+        else if (numAffected == 0) reject();
+        else resolve();
       });
     });
   }

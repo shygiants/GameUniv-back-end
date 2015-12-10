@@ -87,11 +87,19 @@ UserSchema.statics = {
             email: payload.email,
             hashedPassword: payload.hashedPassword
           }, { hashedPassword: false, profilePhoto: false })
-          .populate('havePlayed', '-gameSecret -gameIcon')
-          .populate('developed')
+          .populate('havePlayed', '-gameSecret -gameIcon -achievements')
+          .populate('developed', '-gameIcon')
           .exec(function(err, user) {
             if (err) reject(err);
-            else if (user) resolve(user);
+            else if (user) {
+              User.populate(user, {
+                path: 'developed.achievements',
+                model: 'Achievement'
+              }, function(err, user) {
+                if (err) reject(err);
+                else resolve(user);
+              });
+            }
             else reject();
           });
         }
@@ -124,7 +132,8 @@ UserSchema.statics = {
     return new Promise(function(resolve, reject) {
       User.findByIdAndUpdate(userId, { $addToSet: { havePlayed: new ObjectId(gameId) }}
       , function(err, numAffected) {
-        if (err || numAffected == 0) reject(err);
+        if (err) reject(err);
+        else if (numAffected == 0) reject();
         else resolve();
       });
     });
