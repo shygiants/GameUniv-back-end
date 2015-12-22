@@ -1,6 +1,7 @@
 var randomstring = require('randomstring');
 var mongoose = require('mongoose');
 var fs = require('fs');
+
 var Schema = mongoose.Schema;
 var ObjectId = mongoose.Types.ObjectId;
 
@@ -71,12 +72,13 @@ GameSchema.statics = {
 
     });
   },
-  getById: function(gameId) {
+  getById: function(gameId, projection, population) {
     var Game = this;
     return new Promise(function(resolve, reject) {
-      Game.findById(gameId, '-gameSecret -gameIcon')
-      .populate('achievements', '-icon')
-      .exec(function(err, game) {
+      var query = Game.findById(gameId, projection);
+      if (population)
+        query.populate(population);
+      query.exec(function(err, game) {
         if (err) reject(err);
         else if (game) resolve(game);
         else reject();

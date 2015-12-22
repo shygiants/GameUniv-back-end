@@ -15,6 +15,7 @@ router.post('/', function(req, res, next) {
   req.checkBody('contactEmail', 'Invalid Contact Email').isEmail();
 
   req.asyncValidationErrors().then(function() {
+    // TODO: Check auth token and add game to user
     Game.register(req.body).then(function(game) {
       res.json(game);
     }, function(err) {
@@ -35,49 +36,48 @@ router.get('/', function(req, res, next) {
   });
 });
 
-router.get('/:gameId', function(req, res, next) {
+router.get('/:gameId', jwtAuthenticator, function(req, res, next) {
+  var gameId = req.params.gameId;
+  var projection = '-gameIcon -gameSecret -achievements';
+  var population;
+
   if (req.query.development) {
-    next();
-    return;
+    var games = req.requester.developed;
+    if (games.indexOf(gameId) == -1) {
+      next(new ErrorThrower('Not Found', 404));
+      return;
+    }
+    projection = projection.replace('-gameSecret -achievements', '');
+    population = {
+      path: 'achievements',
+      select: '-icon'
+    };
   }
-  Game.getById(req.params.gameId).then(function(game) {
+
+  Game.getById(gameId, projection, population).then(function(game) {
     res.json(game);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));
     else next(new ErrorThrower('Not Found', 404));
   });
-}, jwtAuthenticator, function(req, res, next) {
-  var games = req.user.developed.filter(function(game) {
-    return (game._id == req.params.gameId);
-  });
-
-  if (typeof games !== 'undefined' && games.length > 0)
-    res.json(games[0]);
-  else
-    next(new ErrorThrower('Not Found', 404))
 });
 
 router.put('/:gameId/gameIcons', multer({
   dest: 'gameIcons/',
   limits: { fieldNameSize: 10240000 }
-}).single('game_icon'), jwtAuthenticator,
-  function(req, res, next) {
-    var games = req.user.developed.filter(function(game) {
-      return (game._id == req.params.gameId);
-    });
-
-    if (typeof games !== 'undefined' && games.length > 0) {
-      var game = games[0];
-      console.log(req.file.path);
+}).single('game_icon'), jwtAuthenticator, function(req, res, next) {
+  var gameId = req.params.gameId;
+  var games = req.requester.developed;
+  if (games.indexOf(gameId) != -1) {
+    Game.getById(gameId).then(function(game) {
       game.setGameIcon(req.file.path).then(function(game) {
         res.json(game._id);
       }, function(err) {
         if (err) next(new ErrorThrower(err, 500));
         else next(new ErrorThrower('Not Found', 404));
       });
-    }
-    else
-      next(new ErrorThrower('Not Found', 404));
+    });
+  } else next(new ErrorThrower('Not Found', 404));
 });
 
 router.get('/:gameId/gameIcons', function(req, res, next) {
@@ -103,30 +103,28 @@ router.post('/:gameId/achievements', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, jwtAuthenticator, function(req, res, next) {
-  var games = req.user.developed.filter(function(game) {
-    return (game._id == req.params.gameId);
-  });
-
-  if (typeof games === 'undefined' || games.length == 0) {
+  var gameId = req.params.gameId;
+  var games = req.requester.developed;
+  if (games.indexOf(gameId) == -1) {
     next(new ErrorThrower('Not Found', 404));
     return;
   }
   var body = req.body;
-    Achievement.create(body.title, body.desc, body.point).then(
-      function(achievementId) {
-        Game.addAchievement(req.params.gameId, achievementId).then(
-          function() {
-            res.json({ achievementId: achievementId });
-          }, function(err) {
-            // TODO: Delete created achievement
-            if (err) next(new ErrorThrower(err, 500));
-            else next(new ErrorThrower('Not Found', 404));
-          }
-        );
-      }, function (err) {
-        if (err) next(new ErrorThrower(err, 500));
-        else next(new ErrorThrower('Something Wrong', 500));
-      });
+  Achievement.create(body.title, body.desc, body.point).then(
+    function(achievementId) {
+      Game.addAchievement(gameId, achievementId).then(
+        function() {
+          res.json({ achievementId: achievementId });
+        }, function(err) {
+          // TODO: Delete created achievement
+          if (err) next(new ErrorThrower(err, 500));
+          else next(new ErrorThrower('Not Found', 404));
+        }
+      );
+    }, function (err) {
+      if (err) next(new ErrorThrower(err, 500));
+      else next(new ErrorThrower('Something Wrong', 500));
+    });
 });
 
 module.exports = router;

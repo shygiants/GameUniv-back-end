@@ -3,10 +3,10 @@ var jwt = require('jsonwebtoken');
 var crypto = require('crypto');
 var fs = require('fs');
 
-var Schema = mongoose.Schema;
-var ObjectId = mongoose.Types.ObjectId;
 var config = require('../config');
 
+var Schema = mongoose.Schema;
+var ObjectId = mongoose.Types.ObjectId;
 var cipher;
 
 var UserSchema = new Schema({
@@ -20,15 +20,6 @@ var UserSchema = new Schema({
 });
 
 UserSchema.methods = {
-  authenticate: function(plainPasswd) {
-    cipher = crypto.createCipher('aes192', config.secret);
-    cipher.update(plainPasswd, 'utf8', 'base64');
-    return cipher.final('base64') === this.hashedPassword;
-  },
-  getAuthToken: function() {
-    // TODO: Add iss, sub, exp...
-    return jwt.sign(this, config.secret);
-  },
   setProfilePhoto: function(filename) {
     var user = this;
     return new Promise(function(resolve, reject) {
@@ -50,15 +41,22 @@ UserSchema.methods = {
 };
 
 UserSchema.statics = {
-  getByEmail: function(email, developed) {
+  getById: function(userId, projection) {
     var User = this;
     return new Promise(function(resolve, reject) {
-      var projection = '-hashedPassword -profilePhoto';
-      projection += (developed)? '' : ' -developed';
-
-      var query = User.findOne({ email: email }, projection)
-      .populate('havePlayed', '-gameSecret -gameIcon -achievements');
-      if (developed) query = query.populate('developed', '-gameSecret');
+      User.findById(userId, projection, function(err, user) {
+        if (err) reject(err);
+        else if (user) resolve(user);
+        else reject();
+      });
+    });
+  },
+  getByEmail: function(email, projection, population) {
+    var User = this;
+    return new Promise(function(resolve, reject) {
+      var query = User.findOne({ email: email }, projection);
+      if (population)
+        query.populate(population);
       query.exec(function(err, user) {
         if (err) reject(err);
         else if (user) resolve(user);
@@ -68,46 +66,20 @@ UserSchema.statics = {
   },
   authenticate: function(email, plainPasswd) {
     var User = this;
+    cipher = crypto.createCipher('aes192', config.secret);
+    cipher.update(plainPasswd, 'utf8', 'base64');
+    var hashedPassword = cipher.final('base64');
+
     return new Promise(function(resolve, reject) {
-      User.findOne({ email: email }, function(err, user) {
+      User.findOne({ email: email, hashedPassword: hashedPassword },
+      function(err, user) {
         if (err) reject(err);
-        else if (user && user.authenticate(plainPasswd)) resolve(user);
+        else if (user) resolve(user);
         else reject();
       });
     });
   },
-  validateToken: function(token) {
-    var User = this;
-    return new Promise(function(resolve, reject) {
-      jwt.verify(token, config.secret, function(err, payload) {
-        if (err) reject(err);
-        else {
-          // token is decoded
-          User.findOne({
-            email: payload.email,
-            hashedPassword: payload.hashedPassword
-          }, { hashedPassword: false, profilePhoto: false })
-          .populate('havePlayed', '-gameSecret -gameIcon -achievements')
-          .populate('developed', '-gameIcon')
-          .exec(function(err, user) {
-            if (err) reject(err);
-            else if (user) {
-              User.populate(user, {
-                path: 'developed.achievements',
-                model: 'Achievement'
-              }, function(err, user) {
-                if (err) reject(err);
-                else resolve(user);
-              });
-            }
-            else reject();
-          });
-        }
-      });
-    });
-  },
   signup: function(body) {
-    // TODO: validation
     cipher = crypto.createCipher('aes192', config.secret);
     cipher.update(body.passwd, 'utf8', 'base64');
 
@@ -120,10 +92,7 @@ UserSchema.statics = {
     return new Promise(function(resolve, reject) {
       created.save(function(err, user) {
         if (err) reject(err);
-        else if (user) {
-          var token = jwt.sign(user, config.secret);
-          resolve(token);
-        }
+        else if (user) resolve(user);
       });
     });
   },
@@ -139,15 +108,7 @@ UserSchema.statics = {
     });
   },
   getProfilePhoto: function(email) {
-    var User = this;
-    return new Promise(function(resolve, reject) {
-      User.findOne({ email: email }, 'profilePhoto')
-      .exec(function(err, user) {
-        if (err) reject(err);
-        else if (user) resolve(user.profilePhoto);
-        else reject();
-      });
-    })
+    return this.getByEmail(email, 'profilePhoto');
   }
 };
 

@@ -18,7 +18,7 @@ gameUnivServices.factory('AuthInterceptor', ['$rootScope', '$q', '$window',
 
 gameUnivServices.factory('Auth', ['$resource',
   function($resource) {
-    return $resource('authTokens/:email', { email: '@email' }, {
+    return $resource('tokens/authTokens/:email', { email: '@email' }, {
       signin: { method: 'POST' }
     });
 }]);
@@ -28,7 +28,7 @@ gameUnivServices.factory('User', ['$resource', '$window',
     return $resource('users/:email', { email: $window.sessionStorage.email }, {
       getUser: {
         method: 'GET',
-        params: { developed: true }
+        params: { development: true }
       }
     });
   }]);

@@ -1,12 +1,16 @@
 var express = require('express');
 var mongoose = require('mongoose');
+
+var accessAuthenticator = require('../middlewares/authenticator').accessAuthenticator;
+var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
+var userPopulator = require('../middlewares/populator').userPopulator;
+
+var ErrorThrower = require('../utils/ErrorThrower');
+
 var Moment = mongoose.model('Moment');
 var User = mongoose.model('User');
 var ObjectId = mongoose.Types.ObjectId;
 var router = express.Router();
-var ErrorThrower = require('../utils/ErrorThrower');
-var accessAuthenticator = require('../middlewares/authenticator').accessAuthenticator;
-var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
 
 router.post('/', function(req, res, next) {
   req.checkBody('content', 'Content Required').notEmpty();
@@ -15,7 +19,8 @@ router.post('/', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, accessAuthenticator, function(req, res, next) {
-  Moment.post(req.body.content, 'text', req.userId, req.gameId).then(function(moment) {
+  var accessInfo = req.accessInfo;
+  Moment.post(req.body.content, 'text', accessInfo.userId, accessInfo.gameId).then(function(moment) {
     console.log(moment);
     res.json({ moment_id: moment._id });
   }, function(err) {
@@ -31,7 +36,9 @@ router.post('/score', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, accessAuthenticator, function(req, res, next) {
-  Moment.post(req.body.score, 'score', req.userId, req.gameId).then(function(moment) {
+  var accessInfo = req.accessInfo;
+  Moment.post(req.body.score, 'score', accessInfo.userId, accessInfo.gameId)
+  .then(function(moment) {
     console.log(moment);
     res.json({ moment_id: moment._id });
   }, function(err) {
@@ -48,7 +55,8 @@ router.post('/achievements', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, accessAuthenticator, function(req, res, next) {
-  Moment.postAchievement(req.body.achievement, 'achievement', req.userId, req.gameId)
+  var accessInfo = req.accessInfo;
+  Moment.postAchievement(req.body.achievement, 'achievement', accessInfo.userId, accessInfo.gameId)
   .then(function(moment) {
     console.log(moment);
     res.json({ moment_id: moment._id });
@@ -68,12 +76,13 @@ router.get('/:momentId', function(req, res, next) {
 });
 
 router.get('/feed/users/:email', jwtAuthenticator, function(req, res, next) {
-  if (req.user.email !== req.params.email) {
+  var requester = req.requester;
+  if (requester.email !== req.params.email) {
     next(new ErrorThrower('Wrong Token', 401));
     return;
   }
 
-  Moment.getFeed(req.user).then(function(moments) {
+  Moment.getFeed(requester).then(function(moments) {
     res.json(moments);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));
@@ -81,8 +90,9 @@ router.get('/feed/users/:email', jwtAuthenticator, function(req, res, next) {
   });
 });
 
-router.get('/timeline/users/:email', jwtAuthenticator, function(req, res, next) {
-  Moment.getTimelineForUser(req.params.email).then(function(moments) {
+router.get('/timeline/users/:email', jwtAuthenticator, userPopulator,
+function(req, res, next) {
+  Moment.getTimelineForUser(req.user._id).then(function(moments) {
     res.json(moments);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));

@@ -30,11 +30,9 @@ var ErrorThrower = require('./utils/ErrorThrower');
 
 // routers
 var users = require('./routes/users');
-var authTokens = require('./routes/authTokens');
 var games = require('./routes/games');
 var moments = require('./routes/moments');
-var authCodes = require('./routes/authCodes');
-var accessTokens = require('./routes/accessTokens');
+var tokens = require('./routes/tokens');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -50,11 +48,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(expressValidator(validatorOpt));
 
 app.use('/users', users);
-app.use('/authTokens', authTokens);
 app.use('/games', games);
 app.use('/moments', moments);
-app.use('/authCodes', authCodes);
-app.use('/accessTokens', accessTokens);
+app.use('/tokens', tokens);
 
 app.get('/', function(req, res, next) {
   res.render('layout');

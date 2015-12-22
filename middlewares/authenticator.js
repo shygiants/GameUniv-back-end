@@ -1,14 +1,19 @@
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
+
+var config = require('../config');
+
+var ErrorThrower = require('../utils/ErrorThrower');
+var Token = require('../utils/Token');
+
 var User = mongoose.model('User');
 var Game = mongoose.model('Game');
-var ErrorThrower = require('../utils/ErrorThrower');
-var config = require('../config');
+
 
 module.exports = {
   jwtAuthenticator: function(req, res, next) {
-    User.validateToken(req.headers.authorization).then(function(user) {
-      req.user = user;
+    Token.getUser(req.headers.authorization).then(function(user) {
+      req.requester = user;
       next();
     }, function(err) {
       // there is something wrong
@@ -18,7 +23,7 @@ module.exports = {
   },
   localAuthenticator: function(req, res, next) {
     User.authenticate(req.params.email, req.body.passwd).then(function(user) {
-      req.user = user;
+      req.requester = user;
       next();
     }, function(err) {
       if (err) next(new ErrorThrower(err, 500));
@@ -29,52 +34,26 @@ module.exports = {
     Game.authenticate(req.body.client_id, req.headers.authorization).then(
       function(game) {
         // game authenticated
-        jwt.verify(req.body.code, config.secret, function(err, payload) {
-          if (err) next(new ErrorThrower(err, 500));
-          else if (game._id == payload.iss &&
-              payload.aud === config.appName &&
-              payload.exp >= Math.floor(new Date() / 1000) &&
-              payload.typ === 'authCode') {
-            // valid token
-            var userId = payload.sub;
-            var gameId = req.body.client_id;
-            User.login(userId, gameId).then(function() {
-              var accessToken = jwt.sign({
-                iss: gameId,
-                sub: userId,
-                aud: config.appName,
-                exp: Math.floor(new Date() / 1000) + config.exp_access_token,
-                typ: 'accessToken'
-              }, config.secret);
-              req.accessToken = accessToken;
-              next();
-            }, function(err) {
-              next(new ErrorThrower(err, 500));
-            });
-          } else {
-            // wrong request
-            next(new ErrorThrower('Wrong request', 400));
-          }
-        });
+        Token.getAccessToken(req.body.code, req.body.client_id).then(
+          function(accessToken) {
+            req.accessToken = accessToken;
+            next();
+          }, function(err) {
+            if (err) next(new ErrorThrower(err, 500));
+            else next(new ErrorThrower('Wrong request', 400))
+          });
       }, function(err) {
         if (err) next(new ErrorThrower(err, 500));
         else next(new ErrorThrower('Wrong request', 400));
-      }
-    );
+      });
   },
   accessAuthenticator: function(req, res, next) {
-    jwt.verify(req.headers.authorization, config.secret, function(err, payload) {
-      if (err) next(new ErrorThrower(err, 500));
-      else if (payload.aud === config.appName &&
-               payload.exp >= Math.floor(new Date() / 1000) &&
-               payload.typ === 'accessToken') {
-        req.userId = payload.sub;
-        req.gameId = payload.iss;
+    Token.getAccessInfo(req.headers.authorization).then(
+      function(accessInfo) {
+        req.accessInfo = accessInfo;
         next();
-      } else {
-        // wrong token
+      }, function(err) {
         next(new ErrorThrower('Wrong token', 401))
-      }
-    });
+      });
   }
 };

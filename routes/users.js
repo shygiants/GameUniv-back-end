@@ -1,13 +1,16 @@
 var express = require('express');
-var router = express.Router();
+var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
 var multer  = require('multer');
 
-var User = mongoose.model('User');
-var jwt = require('jsonwebtoken');
 var config = require('../config');
-var ErrorThrower = require('../utils/ErrorThrower');
+
 var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
+
+var ErrorThrower = require('../utils/ErrorThrower');
+
+var User = mongoose.model('User');
+var router = express.Router();
 
 // signup
 router.post('/', function(req, res, next) {
@@ -22,8 +25,8 @@ router.post('/', function(req, res, next) {
 
   // executes validator
   req.asyncValidationErrors().then(function() {
-      User.signup(req.body).then(function(token) {
-        res.json({ token: token });
+      User.signup(req.body).then(function(user) {
+        res.json({ token: Token.getAuthToken(user) });
       }, function(err) {
         next(new ErrorThrower(err, 500));
       });
@@ -34,30 +37,44 @@ router.post('/', function(req, res, next) {
   });
 
 router.get('/:email', function(req, res, next) {
-    req.checkParams('email', 'Invalid Email').isEmail();
+  req.checkParams('email', 'Invalid Email').isEmail();
 
-    // executes validator
-    req.asyncValidationErrors().then(next, function(err) {
-      // validation error
-      next(new ErrorThrower(err, 400));
-      });
-    }, jwtAuthenticator, function(req, res, next) {
-      User.getByEmail(req.params.email, req.query.developed).then(function(user) {
-        res.json(user);
-      }, function(err) {
-        if (err) next(new ErrorThrower(err, 500));
-        else next(new ErrorThrower('Not Found', 404));
-      });
+  // executes validator
+  req.asyncValidationErrors().then(next, function(err) {
+    // validation error
+    next(new ErrorThrower(err, 400));
     });
+  }, jwtAuthenticator, function(req, res, next) {
+  var projection = '-hashedPassword -profilePhoto -developed';
+  var population = [{
+    path: 'havePlayed',
+    select: '-gameSecret -gameIcon -achievements'
+  }];
+  if (req.query.development) {
+    projection = projection.replace(' -developed', '');
+    population.push({
+      path: 'developed',
+      select: '-gameSecret -gameIcon -achievements'
+    });
+  }
+
+  User.getByEmail(req.params.email, projection, population).then(function(user) {
+    res.json(user);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
+  });
+});
 
 router.put('/:email/profilePhotos', jwtAuthenticator,
   multer({ dest: 'profilePhotos/' }).single('profile_photo'), function(req, res, next) {
-  if (req.user.email !== req.params.email) {
+  var requester = req.requester;
+  if (requester.email !== req.params.email) {
     next(new ErrorThrower('Wrong Token', 401));
     return;
   }
 
-  req.user.setProfilePhoto(req.file.path).then(function(user) {
+  requester.setProfilePhoto(req.file.path).then(function(user) {
     res.json(user.filename);
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));
@@ -66,7 +83,8 @@ router.put('/:email/profilePhotos', jwtAuthenticator,
 });
 
 router.get('/:email/profilePhotos', function(req, res, next) {
-  User.getProfilePhoto(req.params.email).then(function(profilePhoto) {
+  User.getProfilePhoto(req.params.email).then(function(user) {
+    var profilePhoto = user.profilePhoto;
     var options = { root: __dirname + '/../' };
 
     res.sendFile(profilePhoto, options, function(err) {
@@ -76,6 +94,13 @@ router.get('/:email/profilePhotos', function(req, res, next) {
     if (err) next(new ErrorThrower(err, 500));
     else next(new ErrorThrower('Not Found', 404));
   });
+});
+
+
+var Token = require('../utils/Token');
+
+router.get('/', function(req, res, next) {
+
 });
 
 module.exports = router;

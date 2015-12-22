@@ -13,6 +13,24 @@ var MomentSchema = new Schema({
   achievement: { type: Schema.Types.ObjectId, ref: 'Achievement' }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
+function populationForMoment() {
+  var population = [];
+  population.push({
+    path: 'author',
+    select: '-hashedPassword -havePlayed -following -developed -profilePhoto'
+  });
+  population.push({
+    path: 'game',
+    select: '-gameSecret -gameIcon -achievements'
+  });
+  population.push({
+    path: 'achievement',
+    select: '-icon'
+  });
+
+  return population;
+}
+
 MomentSchema.statics = {
   post: function(content, type, userId, gameId, achievementId) {
     var posted = new this({
@@ -48,21 +66,11 @@ MomentSchema.statics = {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.findOne({ _id: new ObjectId(momentId) })
-      .populate('author', '-hashedPassword -developed -profilePhoto')
-      .populate('game', '-gameSecret -gameIcon -achievements')
-      .populate('achievement', '-icon')
+      .populate(populationForMoment())
       .exec(function(err, moment) {
         if (err) reject(err);
-        else if (moment) {
-          Moment.populate(moments, {
-            path: 'author.havePlayed',
-            model: 'Game',
-            select: '-gameSecret -gameIcon -achievements'
-          }, function(err, moments) {
-            if (err) reject(err);
-            else resolve(moments);
-          });
-        } else reject();
+        else if (moment) resolve(moment);
+        else reject();
       });
     });
   },
@@ -70,75 +78,38 @@ MomentSchema.statics = {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.find({ game: { $in: user.havePlayed } })
-      .populate('author', '-hashedPassword -developed -profilePhoto')
-      .populate('game', '-gameSecret -gameIcon -achievements')
-      .populate('achievement', '-icon')
+      .populate(populationForMoment())
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
         if (err) reject(err);
-        else if (moments) {
-          Moment.populate(moments, {
-            path: 'author.havePlayed',
-            model: 'Game',
-            select: '-gameSecret -gameIcon -achievements'
-          }, function(err, moments) {
-            if (err) reject(err);
-            else resolve(moments);
-          });
-        } else reject();
+        else if (moments) resolve(moments);
+        else reject();
       });
     });
   },
-  getTimelineForUser: function(email) {
+  getTimelineForUser: function(userId) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      User.getByEmail(email).then(function(user) {
-        Moment.find({ author: user._id })
-        .populate('author', '-hashedPassword -developed -profilePhoto')
-        .populate('game', '-gameSecret -gameIcon -achievements')
-        .populate('achievement', '-icon')
-        .sort({ created_at: -1 })
-        .exec(function(err, moments) {
-          if (err) reject(err);
-          else if (moments) {
-            Moment.populate(moments, {
-              path: 'author.havePlayed',
-              model: 'Game',
-              select: '-gameSecret -gameIcon -achievements'
-            }, function(err, moments) {
-              if (err) reject(err);
-              else resolve(moments);
-            });
-          } else reject();
-        });
-      }, function(err) {
+      Moment.find({ author: userId })
+      .populate(populationForMoment())
+      .sort({ created_at: -1 })
+      .exec(function(err, moments) {
         if (err) reject(err);
+        else if (moments) resolve(moments);
         else reject();
       });
-
-
     });
   },
   getTimelineForGame: function(gameId) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
       Moment.find({ game: new ObjectId(gameId) })
-      .populate('author', '-hashedPassword -developed -profilePhoto')
-      .populate('game', '-gameSecret -gameIcon -achievements')
-      .populate('achievement', '-icon')
+      .populate(populationForMoment())
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
         if (err) reject(err);
-        else if (moments) {
-          Moment.populate(moments, {
-            path: 'author.havePlayed',
-            model: 'Game',
-            select: '-gameSecret -gameIcon -achievements'
-          }, function(err, moments) {
-            if (err) reject(err);
-            else resolve(moments);
-          });
-        } else reject();
+        else if (moments) resolve(moments);
+        else reject();
       });
     });
   }
