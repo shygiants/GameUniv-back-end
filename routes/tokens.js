@@ -25,18 +25,20 @@ router.get('/authCodes/:email', function(req, res, next) {
     next(new ErrorThrower(err, 400));
   });
 }, jwtAuthenticator, function(req, res, next) {
-  if (req.user.email !== req.params.email) {
+  var user = req.requester;
+  if (user.email !== req.params.email) {
     next(new ErrorThrower('Wrong Token', 401));
     return;
   }
 
-  var authCode = Token.getAuthCode(req.query.client_id, req.user._id);
+  var authCode = Token.getAuthCode(req.query.client_id, user._id);
 
   res.redirect(302, 'https://localhost?code=' + authCode);
 });
 
 // OAuth 2.0 Error Handler
 router.use('/authCodes/:email', function(err, req, res, next) {
+  console.log(err);
   var errorCode = err.getStatusCode();
   var error = (errorCode == 500)? 'server_error' : 'invalid_request';
   console.log('ERROR: %s', error);
