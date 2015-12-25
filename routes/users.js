@@ -5,7 +5,9 @@ var multer  = require('multer');
 
 var config = require('../config');
 
-var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
+var authenticator = require('../middlewares/authenticator');
+var jwtAuthenticator = authenticator.jwtAuthenticator;
+var accessAuthenticator = authenticator.accessAuthenticator;
 
 var ErrorThrower = require('../utils/ErrorThrower');
 
@@ -96,11 +98,14 @@ router.get('/:email/profilePhotos', function(req, res, next) {
   });
 });
 
-
-var Token = require('../utils/Token');
-
-router.get('/', function(req, res, next) {
-
+router.get('/', accessAuthenticator, function(req, res, next) {
+  var accessInfo = req.accessInfo;
+  User.getById(accessInfo.userId, 'userName email').then(function(user) {
+    res.json(user);
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower('Not Found', 404));
+  });
 });
 
 module.exports = router;

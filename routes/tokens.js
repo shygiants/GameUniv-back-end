@@ -31,7 +31,7 @@ router.get('/authCodes/:email', function(req, res, next) {
     return;
   }
 
-  var authCode = Token.getAuthCode(req.query.client_id, user._id);
+  var authCode = Token.getAuthCode(user._id, req.query.client_id);
 
   res.redirect(302, 'https://localhost?code=' + authCode);
 });
