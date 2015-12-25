@@ -1,5 +1,6 @@
 var express = require('express');
 var mongoose = require('mongoose');
+var multer = require('multer');
 
 var accessAuthenticator = require('../middlewares/authenticator').accessAuthenticator;
 var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
@@ -56,7 +57,22 @@ router.post('/achievements', function(req, res, next) {
   });
 }, accessAuthenticator, function(req, res, next) {
   var accessInfo = req.accessInfo;
-  Moment.postAchievement(req.body.achievement, 'achievement', accessInfo.userId, accessInfo.gameId)
+  Moment.postAchievement(req.body.achievement, accessInfo.userId, accessInfo.gameId)
+  .then(function(moment) {
+    console.log(moment);
+    res.json({ moment_id: moment._id });
+  }, function(err) {
+    next(new ErrorThrower(err, 500));
+  });
+});
+
+router.post('/images', multer({ dest: 'momentImages/' }).single('image'),
+function(req, res, next) {
+  if (!req.file || req.file.size == 0) next(new ErrorThrower('Wrong Request', 400));
+  else next();
+}, accessAuthenticator, function(req, res, next) {
+  var accessInfo = req.accessInfo;
+  Moment.postImage(req.body.content, req.file.path, accessInfo.userId, accessInfo.gameId)
   .then(function(moment) {
     console.log(moment);
     res.json({ moment_id: moment._id });
@@ -72,6 +88,19 @@ router.get('/:momentId', function(req, res, next) {
   }, function(err) {
     if (err) next(new ErrorThrower(err, 500));
     else next(new ErrorThrower("There is no corresponding moment", 404));
+  });
+});
+
+router.get('/:momentId/images', function(req, res, next) {
+  Moment.getImage(req.params.momentId).then(function(image) {
+    var options = { root: __dirname + '/../' };
+
+    res.sendFile(image, options, function(err) {
+      if (err) next(new ErrorThrower(err, 500));
+    });
+  }, function(err) {
+    if (err) next(new ErrorThrower(err, 500));
+    else next(new ErrorThrower("Not Found", 404));
   });
 });
 

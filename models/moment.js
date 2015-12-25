@@ -3,14 +3,15 @@ var Schema = mongoose.Schema;
 var ObjectId = mongoose.Types.ObjectId;
 var User = mongoose.model('User');
 
-var types = 'score text achievement'.split(' ');
+var types = 'score text achievement image'.split(' ');
 
 var MomentSchema = new Schema({
   content: { type: String },
   type: { type: String, required: true, enum: types, index: true },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   game: { type: Schema.Types.ObjectId, ref: 'Game', required: true, index: true },
-  achievement: { type: Schema.Types.ObjectId, ref: 'Achievement' }
+  achievement: { type: Schema.Types.ObjectId, ref: 'Achievement' },
+  image: String
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 function populationForMoment() {
@@ -32,7 +33,7 @@ function populationForMoment() {
 }
 
 MomentSchema.statics = {
-  post: function(content, type, userId, gameId, achievementId) {
+  post: function(content, type, userId, gameId) {
     var posted = new this({
       content: content,
       type: type,
@@ -47,9 +48,9 @@ MomentSchema.statics = {
       });
     });
   },
-  postAchievement: function(achievementId, type, userId, gameId) {
+  postAchievement: function(achievementId, userId, gameId) {
     var posted = new this({
-      type: type,
+      type: 'achievement',
       author: new ObjectId(userId),
       game: new ObjectId(gameId),
       achievement: new ObjectId(achievementId)
@@ -62,10 +63,36 @@ MomentSchema.statics = {
       });
     });
   },
+  postImage: function(content, image, userId, gameId) {
+    var posted = new this({
+      type: 'image',
+      content: content,
+      author: new ObjectId(userId),
+      game: new ObjectId(gameId),
+      image: image
+    });
+
+    return new Promise(function(resolve, reject) {
+      posted.save(function(err, moment) {
+        if (err) reject(err);
+        else if (moment) resolve(moment);
+      });
+    });
+  },
+  getImage: function(momentId) {
+    var Moment = this;
+    return new Promise(function(resolve, reject) {
+      Moment.findById(momentId, "image", function(err, moment) {
+        if (err) reject(err);
+        else if (moment.image) resolve(moment.image);
+        else reject();
+      });
+    });
+  },
   getById: function(momentId) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.findOne({ _id: new ObjectId(momentId) })
+      Moment.findOne({ _id: new ObjectId(momentId) }, "-image")
       .populate(populationForMoment())
       .exec(function(err, moment) {
         if (err) reject(err);
@@ -77,7 +104,7 @@ MomentSchema.statics = {
   getFeed: function(user) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.find({ game: { $in: user.havePlayed } })
+      Moment.find({ game: { $in: user.havePlayed } }, "-image")
       .populate(populationForMoment())
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
@@ -90,7 +117,7 @@ MomentSchema.statics = {
   getTimelineForUser: function(userId) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.find({ author: userId })
+      Moment.find({ author: userId }, "-image")
       .populate(populationForMoment())
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
@@ -103,7 +130,7 @@ MomentSchema.statics = {
   getTimelineForGame: function(gameId) {
     var Moment = this;
     return new Promise(function(resolve, reject) {
-      Moment.find({ game: new ObjectId(gameId) })
+      Moment.find({ game: new ObjectId(gameId) }, "-image")
       .populate(populationForMoment())
       .sort({ created_at: -1 })
       .exec(function(err, moments) {
