@@ -55,7 +55,9 @@ router.post('/authTokens/:email', function(req, res, next) {
   });
 }, localAuthenticator, function(req, res, next) {
   res.json({
-    token: Token.getAuthToken(req.requester)
+    auth_token: Token.getAuthToken(req.requester),
+    token_type: 'JWT',
+    expires_in: config.exp_access_token
   });
 });
 
