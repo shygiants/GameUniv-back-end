@@ -4,6 +4,7 @@ var multer  = require('multer');
 var mongoose = require('mongoose');
 var Game = mongoose.model('Game');
 var Achievement = mongoose.model('Achievement');
+var Contents = mongoose.model('Contents');
 var ErrorThrower = require('../utils/ErrorThrower');
 var jwtAuthenticator = require('../middlewares/authenticator').jwtAuthenticator;
 
@@ -125,6 +126,37 @@ router.post('/:gameId/achievements', function(req, res, next) {
       if (err) next(new ErrorThrower(err, 500));
       else next(new ErrorThrower('Something Wrong', 500));
     });
+});
+
+router.put('/:gameId/contents', multer({
+  dest: 'contentsPhotos/',
+  limits: { fieldNameSize: 10240000 }
+}).array('contents_photos'), function(req, res, next) {
+  req.checkBody('contents', 'Contents required').notEmpty();
+
+  req.asyncValidationErrors().then(next, function(err) {
+    next(new ErrorThrower(err, 400));
+  });
+}, jwtAuthenticator, function(req, res, next) {
+  var gameId = req.params.gameId;
+  var userId = req.requester._id;
+  
+  // TODO: Validation JSON
+  var contents = JSON.parse(req.body.contents);
+  var files = req.files;
+  
+  var created = Contents.create(contents.title, contents.description, files[0], userId, gameId);
+  created.addPages(contents.pages, req.files);
+  created.save(function(err) {
+    if (err) {
+      next(new ErrorThrower(err, 500));
+      return;
+    }
+  });
+  
+  res.json({
+    contents_id: created._id
+  });
 });
 
 module.exports = router;

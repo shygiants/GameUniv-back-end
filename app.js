@@ -21,6 +21,7 @@ require('./models/game');
 require('./models/user');
 require('./models/moment');
 require('./models/achievement');
+require('./models/contents');
 var validatorOpt = require('./middlewares/express-validator').options;
 // error handler middlewares
 var errorHandlers = require('./middlewares/error-handlers');
